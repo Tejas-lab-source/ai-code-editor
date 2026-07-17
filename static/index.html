@@ -413,9 +413,92 @@
     padding: 1px 5px;
     font-size: 10px;
   }
+
+  /* ---------- Mobile menu toggle (hidden on desktop) ---------- */
+  #menuToggle {
+    display: none;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  #menuToggle span {
+    display: block;
+    width: 14px; height: 2px;
+    background: var(--text);
+    position: relative;
+  }
+  #menuToggle span::before, #menuToggle span::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    width: 14px; height: 2px;
+    background: var(--text);
+  }
+  #menuToggle span::before { top: -5px; }
+  #menuToggle span::after { top: 5px; }
+
+  #sidebarOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #000000aa;
+    z-index: 3;
+  }
+
+  /* ---------- Responsive breakpoints ---------- */
+  @media (max-width: 768px) {
+    #sidebar {
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      z-index: 4;
+      transform: translateX(-100%);
+      transition: transform .25s ease;
+      width: 78vw;
+      max-width: 280px;
+      box-shadow: 8px 0 30px #000000aa;
+    }
+    #sidebar.open { transform: translateX(0); }
+    #sidebarOverlay.open { display: block; }
+
+    #menuToggle { display: flex; }
+
+    header { padding: 12px 16px; }
+    header .path { font-size: 11.5px; }
+    header .model-tag { font-size: 9.5px; padding: 3px 8px; }
+
+    .turn { padding: 4px 16px 20px; }
+    #input-area { padding: 12px 14px 16px; }
+    #form { padding: 8px 8px 8px 12px; }
+
+    .empty-state { padding: 0 16px; }
+    .empty-state .glyph { font-size: 28px; }
+    .empty-state h2 { font-size: 16px; }
+    .empty-state p { font-size: 12.5px; }
+    .suggestions { gap: 6px; }
+    .suggestion-chip { font-size: 11px; padding: 7px 11px; }
+
+    .turn-body { font-size: 14px; padding-left: 14px; }
+    .prompt-line { font-size: 11px; }
+
+    textarea#input { font-size: 16px; } /* prevents iOS auto-zoom on focus */
+  }
+
+  @media (max-width: 420px) {
+    .suggestions { max-width: 100%; }
+    .suggestion-chip { flex: 1 1 calc(50% - 6px); text-align: center; }
+    header .path b { display: none; }
+  }
 </style>
 </head>
 <body>
+
+<div id="sidebarOverlay"></div>
 
 <aside id="sidebar">
   <div class="traffic"><span></span><span></span><span></span></div>
@@ -437,7 +520,10 @@
 
 <div id="main">
   <header>
-    <div class="path">~/<b>project</b> — session</div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <button id="menuToggle" aria-label="Toggle menu"><span></span></button>
+      <div class="path">~/<b>project</b> — session</div>
+    </div>
     <span class="model-tag" id="headerModel">—</span>
   </header>
 
@@ -503,7 +589,26 @@ document.querySelectorAll('.suggestion-chip').forEach(chip => {
 document.getElementById('newChat').addEventListener('click', () => {
   chat.innerHTML = '';
   chat.appendChild(emptyState);
+  closeSidebar();
 });
+
+// Mobile sidebar drawer
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('sidebarOverlay');
+const menuToggle = document.getElementById('menuToggle');
+
+function openSidebar() {
+  sidebar.classList.add('open');
+  overlay.classList.add('open');
+}
+function closeSidebar() {
+  sidebar.classList.remove('open');
+  overlay.classList.remove('open');
+}
+menuToggle.addEventListener('click', () => {
+  sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+});
+overlay.addEventListener('click', closeSidebar);
 
 function renderMarkdown(container, text) {
   container.innerHTML = marked.parse(text);
